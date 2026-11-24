@@ -37,6 +37,12 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.collectAsState
+import io.github.ivorisnoob.smoothmotion.media3.SmoothMotion
+import io.github.ivorisnoob.smoothmotion.media3.SmoothMotionConfig
+import io.github.ivorisnoob.smoothmotion.media3.describe
+import io.github.ivorisnoob.smoothmotion.ui.bindSmoothMotion
+import io.github.ivorisnoob.smoothmotion.ui.unbindSmoothMotion
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -174,6 +180,10 @@ fun PlayerScreen(req: PlayReq, zapList: List<Item>, liveAll: List<Item>, seriesI
                 it.videoChangeFrameRateStrategy = if (AppSettings.autoFps) C.VIDEO_CHANGE_FRAME_RATE_STRATEGY_ONLY_IF_SEAMLESS else C.VIDEO_CHANGE_FRAME_RATE_STRATEGY_OFF
             }
     }
+    val motion = remember(player) { SmoothMotion.install(player, ctx, SmoothMotionConfig(enabled = req.live, maxFps = 48)) }
+    var motionMode by remember { mutableIntStateOf(if (req.live) 48 else 0) }
+    val motionStatus by motion.status.collectAsState()
+    val motionAspect by motion.videoAspectRatio.collectAsState()
     val h = remember { Handler(Looper.getMainLooper()) }
     // State for keeping the screen awake: applies while playing, buffering or paused by the user
     // (not after the sleep timer, at the end, on error or in the background).
@@ -232,6 +242,11 @@ fun PlayerScreen(req: PlayReq, zapList: List<Item>, liveAll: List<Item>, seriesI
     var aspect by remember { mutableIntStateOf(General.defaultAspect) }
     // Display aspect ratio of the current video (width × pixel ratio / height), 0 = not known yet (issue 10)
     var videoAr by remember { mutableStateOf(0f) }
+    LaunchedEffect(motionAspect) { motionAspect?.let { videoAr = it } }
+    LaunchedEffect(motionMode, cur.live) {
+        motion.enabled = cur.live && motionMode != 0
+        if (motionMode != 0) motion.maxFps = motionMode
+    }
     var interact by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var flash by remember { mutableStateOf<Flash?>(null) }
     var info by remember { mutableStateOf<String?>(null) }
@@ -794,6 +809,7 @@ fun PlayerScreen(req: PlayReq, zapList: List<Item>, liveAll: List<Item>, seriesI
             saveProgress()
             h.removeCallbacksAndMessages(null)
             player.removeListener(l)
+            motion.release()
             player.release()
             // Release the buffer (a running recording keeps holding it)
             LiveTimeshift.stop()
@@ -1158,8 +1174,10 @@ fun PlayerScreen(req: PlayReq, zapList: List<Item>, liveAll: List<Item>, seriesI
                     useController = false
                     setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
                     this.player = player
+                    bindSmoothMotion(motion)
                 }
             },
+            onRelease = { v -> v.unbindSmoothMotion(); v.player = null },
             update = { v ->
                 // apply only if something really changed (saves work on every redraw)
                 val styleKey = "$am|$sized|${AppSettings.subSize}|${AppSettings.subColor}|${AppSettings.subBg}|${AppSettings.subEdge}"
@@ -1395,6 +1413,7 @@ fun PlayerScreen(req: PlayReq, zapList: List<Item>, liveAll: List<Item>, seriesI
                 ) {
                     if (cur.live) {
                         LiveInfoBlock(curItem, cur.title, if (curIdx >= 0) curIdx + 1 else 0, epg)
+                        Text("MEMC: ${motionStatus.describe()}", color = Color.White, fontSize = 14.sp)
                         Spacer(Modifier.height(20.dp))
                         // Recently watched channels (Up from the buttons): switch back with one press
                         RecentChannelsRow(liveAll, cur.itemId, setLabel) { switchTo(it, zapSrc) }
@@ -1408,6 +1427,9 @@ fun PlayerScreen(req: PlayReq, zapList: List<Item>, liveAll: List<Item>, seriesI
                             PRoundButton(Modifier.focusRequester(liveFirst), label = "Senderliste", onLabel = setLabel, onClick = { openChannels() }) {
                                 PlayerIcon(PIcon.Channels, it)
                             }
+                            PRoundButton(label = "MEMC: ${motionStatus.describe()}", onLabel = setLabel, onClick = {
+                                motionMode = when (motionMode) { 0 -> 48; 48 -> 60; else -> 0 }
+                            }) { c -> Text(if (motionMode == 0) "OFF" else "$motionMode", color = c, fontSize = 13.sp, fontWeight = FontWeight.Bold) }
                             PRoundButton(label = "TV-Guide", onLabel = setLabel, onClick = { controls = false; showGuide = true }) {
                                 PlayerIcon(PIcon.Guide, it)
                             }

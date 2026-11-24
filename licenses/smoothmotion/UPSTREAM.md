@@ -1,0 +1,1 @@
+Vendored from https://github.com/Ivorisnoob/smoothmotion-android commit 5fd0adbf2a4e8f169e0a63fdeae2444e00ef0e6d. Changes: live policy, minimum cap 48, resource namespace. Apache-2.0 notices retained. Experimental device validation required.

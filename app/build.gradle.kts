@@ -60,8 +60,8 @@ android {
         // Test build (Run in Android Studio / debug APK): own app ID, so the private IPVIO app on the TV
         // is not overwritten. Both apps can be installed side by side (own data, own name).
         debug {
-            applicationIdSuffix = ".test"
-            manifestPlaceholders["appLabel"] = "IPVIO Stream"
+            applicationIdSuffix = ".motion"
+            manifestPlaceholders["appLabel"] = "IPVIO Motion"
         }
         release {
             if (hasKeystore) signingConfig = signingConfigs.getByName("release")
@@ -103,6 +103,8 @@ dependencies {
     // MPEG-DASH (.mpd) streams; without it Media3 throws IllegalStateException when such a stream is opened
     implementation("androidx.media3:media3-exoplayer-dash:1.11.1")
     implementation("androidx.media3:media3-ui:1.11.1")
+    implementation("androidx.media3:media3-effect:1.11.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
     // MetadataRetriever: reads the tracks of a stream from its header for the detail page (MediaProbe.kt, T-033)
     implementation("androidx.media3:media3-inspector:1.11.1")
     // Software audio decoder (AC3/E-AC3/DTS ...) for headphones/Bluetooth, see SoftAudio.kt. GPL-3.0 – the reason the app is GPL-3.0.

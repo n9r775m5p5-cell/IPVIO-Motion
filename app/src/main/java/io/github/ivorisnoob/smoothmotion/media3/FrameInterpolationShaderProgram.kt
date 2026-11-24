@@ -117,6 +117,7 @@ internal class FrameInterpolationShaderProgram(
         presentationTimeUs: Long
     ) {
         try {
+            control.inputFrames++
             ensureConfigured(inputTexture.width, inputTexture.height)
             measureSource(presentationTimeUs)
             currentPrepared = false
@@ -423,6 +424,7 @@ internal class FrameInterpolationShaderProgram(
     }
 
     private fun reportError(cause: Exception, presentationTimeUs: Long) {
+        control.lastError = (cause.message ?: cause.javaClass.simpleName).take(100)
         val exception = cause as? VideoFrameProcessingException
             ?: VideoFrameProcessingException.from(cause, presentationTimeUs)
         errorExecutor.execute { errorListener.onError(exception) }
@@ -468,6 +470,7 @@ internal class FrameInterpolationShaderProgram(
         }
         if (!interpolationUsable) return
         val gles = MotionGl.glesVersion()
+        control.glInfo = "${GLES20.glGetString(GLES20.GL_RENDERER)} / ES ${gles / 10}.${gles % 10}"
         SmoothMotionLog.i(
             TAG,
             "GPU ${GLES20.glGetString(GLES20.GL_RENDERER)} | ${GLES20.glGetString(GLES20.GL_VERSION)}"
@@ -485,6 +488,7 @@ internal class FrameInterpolationShaderProgram(
             control.engine = candidate.name
             SmoothMotionLog.i(TAG, "Motion engine: ${candidate.name}")
         } catch (e: Exception) {
+            control.lastError = (e.message ?: e.javaClass.simpleName).take(100)
             SmoothMotionLog.e(TAG, "Engine ${candidate.name} could not build here; passing frames through", e)
             try {
                 candidate.release()

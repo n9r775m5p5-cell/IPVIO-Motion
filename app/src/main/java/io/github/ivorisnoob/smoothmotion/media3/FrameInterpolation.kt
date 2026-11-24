@@ -70,6 +70,10 @@ public class FrameInterpolationControl {
     @Volatile
     var active: Boolean = false
 
+    @Volatile var inputFrames: Long = 0L
+    @Volatile var glInfo: String = "No GL context yet"
+    @Volatile var lastError: String = "-"
+
     /** Main thread writes: the output rate to aim for, in frames per second of real time. */
     @Volatile
     var targetFps: Int = FrameInterpolationPolicy.MIN_TARGET_FPS

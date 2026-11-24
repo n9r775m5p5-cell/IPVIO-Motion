@@ -83,6 +83,9 @@ public class SmoothMotion private constructor(
     private val appContext = context.applicationContext
     private val governor = FrameInterpolationGovernor(appContext)
 
+    /** Read-only diagnostic counters; output counts are GL emissions, not display presentation. */
+    public val diagnostics: FrameInterpolationControl get() = governor.control
+
     /** Whether this device's GPU runs the engine (OpenGL ES 3.2). Fixed for the device. */
     public val isSupported: Boolean = FrameInterpolationSupport.isSupported(appContext)
 

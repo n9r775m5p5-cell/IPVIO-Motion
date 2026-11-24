@@ -164,7 +164,7 @@ fun PlayerScreen(req: PlayReq, zapList: List<Item>, liveAll: List<Item>, seriesI
             .setConnectTimeoutMs(10_000)
             .setReadTimeoutMs(15_000)
         // W-005/W-007: renderers wrapped for the subtitle and audio delay (no change while both are 0)
-        ExoPlayer.Builder(ctx, PlayerSync.wrap(SoftAudio.factory(ctx)))
+        ExoPlayer.Builder(ctx, if (req.live) SoftAudio.factory(ctx) else PlayerSync.wrap(SoftAudio.factory(ctx)))
             .setLoadControl(Mem.loadControl(ctx))
             .setWakeMode(C.WAKE_MODE_NETWORK)
             // "tap://" = live buffer on the device (rewind, recording), everything else as before
@@ -1332,7 +1332,7 @@ fun PlayerScreen(req: PlayReq, zapList: List<Item>, liveAll: List<Item>, seriesI
         }
 
         if (AppSettings.clockOn && !controls && panel == Panel.NONE) PClock()
-        if (techOn) PTechOverlay(player)
+        if (techOn) PTechOverlay(player, motion)
 
         // ---------------------------------------------------------------- Skip & next episode
         val seg0 = activeSeg?.takeIf { segVisible || controls }

@@ -205,7 +205,6 @@ object FrameInterpolationPolicy {
         powerSave: Boolean,
         cannotKeepUp: Boolean
     ): Boolean = enabledByUser &&
-        !isLive &&
         !isHdr &&
         thermalStatus < PowerManager.THERMAL_STATUS_MODERATE &&
         !powerSave &&

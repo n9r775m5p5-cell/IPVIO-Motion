@@ -55,7 +55,7 @@ fun BoxScope.PTechOverlay(player: ExoPlayer, motion: SmoothMotion? = null) {
                 val now = SystemClock.elapsedRealtime()
                 val sec = ((now - lastTime) / 1000.0).coerceAtLeast(0.001)
                 val decoded = dc?.renderedOutputBufferCount ?: 0
-                out.add("MEMC V0.2: ${motion.status.value.describe()}")
+                out.add("MEMC V0.3: ${motion.status.value.describe()}")
                 out.add("GPU supported: ${motion.isSupported} | active: ${d.active}")
                 out.add(d.glInfo)
                 out.add("GL input: ${d.inputFrames} | engine: ${d.engine.ifEmpty { "-" }}")
